@@ -18,6 +18,11 @@ export enum SVGImagePart {
   beard = "<!-- beard -->",
 }
 
+export enum AspectRatio {
+  WIDTH = 1024,
+  HEIGHT = 1024,
+}
+
 export enum FaceParts {
   background = "background",
   head = "head",

@@ -11,6 +11,7 @@ import sharp from "sharp";
 // Constants
 import {
   adjectives,
+  AspectRatio,
   FaceParts,
   imagesPath,
   jsonPath,
@@ -131,7 +132,10 @@ async function svgToPng(name: string): Promise<void> {
     const svgSource = `${imagesPath}${name}.svg`;
     const destination = `${imagesPath}${name}.png`;
     const image = await sharp(svgSource).png();
-    const imageResized = await image.resize(1024, 1024);
+    const imageResized = await image.resize(
+      AspectRatio.WIDTH,
+      AspectRatio.HEIGHT
+    );
 
     await imageResized.toFile(destination);
   } catch (error) {
