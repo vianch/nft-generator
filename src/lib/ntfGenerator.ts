@@ -38,8 +38,8 @@ const takenNames: NtfNames = {} as NtfNames;
 const takenFaces: NtfNames = {} as NtfNames;
 
 function getRandomName(): string {
-  const randomAdjective = randomElement(adjectives);
-  const randomName = randomElement(names);
+  const randomAdjective = randomElement<string>(adjectives);
+  const randomName = randomElement<string>(names);
   const fullName = `${randomAdjective}-${randomName}`;
 
   if (takenNames[fullName] || !fullName) {
