@@ -1,5 +1,7 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="3000px" height="3000px" viewBox="0 0 3000 3000"
+ preserveAspectRatio="xMidYMid meet">
 <g id="Frame 42">
-<rect width="256" height="256" fill="#4DFF5E"/>
+<rect  width="3000px" height="3000px"  fill="#676E81"/>
 </g>
 </svg>

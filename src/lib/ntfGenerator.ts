@@ -12,7 +12,7 @@ import sharp from "sharp";
 import {
   adjectives,
   AspectRatio,
-  FaceParts,
+  BodyParts,
   imagesPath,
   jsonPath,
   maxNumberNFT,
@@ -24,18 +24,20 @@ import {
 } from "./constants";
 
 // Utils
-import { getRandomInt, randomElement } from "../utils/random.utils";
+import { getRangeRandomInt, randomElement } from "../utils/random.utils";
+import { countOccurrences } from "../utils/arrays.utils";
 import logger, { consoleColors } from "./logger";
 
 const SVGtemplate = `
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="3000px" height="3000px" viewBox="0 0 3000 3000"
+ preserveAspectRatio="xMidYMid meet">
     ${SVGImagePart.background}
-    ${SVGImagePart.head}
-    ${SVGImagePart.hair}
+    ${SVGImagePart.body}
     ${SVGImagePart.eyes}
-    ${SVGImagePart.nose}
-    ${SVGImagePart.mouth}
+    ${SVGImagePart.hair}
     ${SVGImagePart.beard}
+    ${SVGImagePart.accessories}
 </svg>`;
 const takenNames: NtfNames = {} as NtfNames;
 const takenFaces: NtfNames = {} as NtfNames;
@@ -57,64 +59,72 @@ function getRandomName(): string {
   }
 }
 
-function getRandomFace(combinations = 4): { faceId: string; face: Face } {
-  const face = {
-    background: getRandomInt(combinations),
-    head: getRandomInt(combinations),
-    hair: getRandomInt(combinations),
-    eyes: getRandomInt(combinations),
-    nose: getRandomInt(combinations),
-    mouth: getRandomInt(combinations),
-    beard: getRandomInt(combinations),
+function getRarity(bodyId: string): string {
+  const bodyPartsIds = bodyId.split("");
+  const numberOfMissingParts = countOccurrences<string>(bodyPartsIds, "0");
+  return numberOfMissingParts > 2
+    ? RarityType.COMMON
+    : numberOfMissingParts === 2
+    ? RarityType.RARE
+    : RarityType.EPIC;
+}
+
+function getRandomBodyPart(
+  combinations: number,
+  rarityPercentage = 0.0
+): number {
+  const randomNumber = getRangeRandomInt(1, combinations);
+
+  return Math.random() > rarityPercentage ? randomNumber : 0;
+}
+
+function getRandomBody(combinations = 7): CompleteBodyInfo {
+  const bodyPart = {
+    background: getRandomBodyPart(combinations),
+    body: 0,
+    eyes: getRandomBodyPart(combinations),
+    hair: getRandomBodyPart(combinations, Rarity.hair),
+    beard: getRandomBodyPart(combinations, Rarity.beard),
+    accessories: getRandomBodyPart(combinations, Rarity.accessories),
   };
-  const faceId = Object.values(face).join("");
+  const bodyId = Object.values(bodyPart).join("");
 
   return {
-    faceId,
-    face,
+    bodyId,
+    bodyPart,
+    rarity: getRarity(bodyId),
   };
 }
 
-function getLayer(name: string, version: number, skipPercentage = 0.0): string {
-  const svgFile = readFileSync(
-    `./layers/${name}/${name}${version}.svg`,
-    "utf8"
-  );
-  const regularExpression = /(?<=<svg\s*[^>]*>)([\s\S]*?)(?=<\/svg>)/g || [""];
-  const match = svgFile?.match(regularExpression);
-  const layer = match ? match[0] : "";
-  return Math.random() > skipPercentage && layer ? layer : "";
+function getLayer(name: string, version: number): string {
+  const filePath = `./layers/${name}/${name}${version}.svg`;
+  const existFile = existsSync(filePath);
+
+  if (existFile) {
+    const svgFile = readFileSync(filePath, "utf8");
+    const regularExpression = /(?<=<svg\s*[^>]*>)([\s\S]*?)(?=<\/svg>)/g || [
+      "",
+    ];
+    const match = svgFile?.match(regularExpression);
+    return match ? match[0] : "";
+  }
+
+  return "";
 }
 
-function getFaceTemplate(face: Face): { image: string; rarity: RarityType } {
-  const beardLayer = getLayer(FaceParts.beard, face.beard, Rarity.beard);
-  const image = SVGtemplate.replace(
+function getBodyTemplate(bodyPart: BodyPart): string {
+  return SVGtemplate.replace(
     SVGImagePart.background,
-    getLayer(FaceParts.background, face.background)
+    getLayer(BodyParts.background, bodyPart.background)
   )
-    .replace(SVGImagePart.head, getLayer(FaceParts.head, face.head))
-    .replace(SVGImagePart.hair, getLayer(FaceParts.hair, face.hair))
-    .replace(SVGImagePart.eyes, getLayer(FaceParts.eyes, face.eyes))
-    .replace(SVGImagePart.nose, getLayer(FaceParts.nose, face.nose))
-    .replace(SVGImagePart.mouth, getLayer(FaceParts.mouth, face.mouth))
-    .replace(SVGImagePart.beard, beardLayer);
-
-  // TODO: Change rarity return to a rarity calculation method
-  return {
-    image,
-    rarity: beardLayer?.length > 0 ? RarityType.RARE : RarityType.COMMON,
-  };
-}
-
-function getMetaDataAttributes(rarity: RarityType): ImageAttributes[] {
-  return rarity === RarityType.RARE
-    ? [
-        {
-          name: FaceParts.beard,
-          rarity: Rarity.beard,
-        },
-      ]
-    : [];
+    .replace(SVGImagePart.body, getLayer(BodyParts.body, bodyPart.body))
+    .replace(SVGImagePart.eyes, getLayer(BodyParts.eyes, bodyPart.eyes))
+    .replace(SVGImagePart.hair, getLayer(BodyParts.hair, bodyPart.hair))
+    .replace(SVGImagePart.beard, getLayer(BodyParts.beard, bodyPart.beard))
+    .replace(
+      SVGImagePart.accessories,
+      getLayer(BodyParts.accessories, bodyPart.accessories)
+    );
 }
 
 function getMetaData(name: string, rarity: RarityType): MetaData {
@@ -123,7 +133,6 @@ function getMetaData(name: string, rarity: RarityType): MetaData {
     description: `A drawing of ${name.split("-").join(" ")}`,
     image: `${name}.png`,
     rarity,
-    attributes: getMetaDataAttributes(rarity),
   };
 }
 
@@ -146,24 +155,24 @@ async function svgToPng(name: string): Promise<void> {
 }
 
 function createImage(): void {
-  const randomFace = getRandomFace();
+  const randomBody = getRandomBody();
 
-  if (takenFaces[randomFace.faceId]) {
+  if (takenFaces[randomBody.bodyId]) {
     logger.info(
       consoleColors.Yellow,
-      `FaceId ${randomFace.faceId} already exists, trying again`
+      `bodyId ${randomBody.bodyId} already exists, trying again`
     );
     createImage();
   } else {
     const name = getRandomName();
-    const faceTemplate = getFaceTemplate(randomFace.face);
-    const imageMetaData = getMetaData(name, faceTemplate.rarity);
+    const completeImage = getBodyTemplate(randomBody.bodyPart);
+    const imageMetaData = getMetaData(name, randomBody.rarity as RarityType);
 
     // Export final SVG image and JSON Metadata
-    writeFileSync(`${imagesPath}${name}.svg`, faceTemplate.image || "");
+    writeFileSync(`${imagesPath}${name}.svg`, completeImage || "");
     writeFileSync(`${jsonPath}${name}.json`, JSON.stringify(imageMetaData));
     svgToPng(name);
-    takenFaces[randomFace.faceId] = randomFace.faceId;
+    takenFaces[randomBody.bodyId] = randomBody.bodyId;
     logger.info(consoleColors.Green, `- ${name} created`);
   }
 }

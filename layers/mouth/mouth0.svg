@@ -1,4 +1,6 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="3000px" height="3000px" viewBox="0 0 3000 3000"
+ preserveAspectRatio="xMidYMid meet">
 <g id="Frame 26">
 <g id="Group 39">
 <path id="Vector" d="M170.785 182.425C170.785 183.515 172.311 185.26 174.274 185.914C176.455 186.786 177.327 186.132 176.891 184.605C175.801 181.334 170.785 179.59 170.785 182.425Z" fill="black"/>

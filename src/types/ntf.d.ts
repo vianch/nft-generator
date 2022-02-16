@@ -2,23 +2,22 @@ interface NtfNames {
   [key: string]: string;
 }
 
-interface Face {
+interface BodyPart {
+  accessories: number;
   background: number;
-  head: number;
+  body: number;
+  beard: number;
   hair: number;
   eyes: number;
-  nose: number;
-  mouth: number;
-  beard: number;
 }
 
-interface ImageAttributes {
-  name: string;
-  rarity: number;
+interface CompleteBodyInfo {
+  bodyId: string;
+  bodyPart: BodyPart;
+  rarity: string;
 }
 
 interface MetaData {
-  attributes: ImageAttributes[];
   name: string;
   description: string;
   image: string;

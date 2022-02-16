@@ -1,7 +1,7 @@
 export const outPath = "./out/";
 export const imagesPath = `${outPath}images/`;
 export const jsonPath = `${outPath}json/`;
-export const maxNumberNFT = 50;
+export const maxNumberNFT = 100;
 
 export enum Logs {
   SHOW = "SHOW_LOGS",
@@ -9,13 +9,12 @@ export enum Logs {
 }
 
 export enum SVGImagePart {
+  accessories = "<!-- accessories -->",
   background = "<!-- bg -->",
-  head = "<!-- head -->",
-  hair = "<!-- hair -->",
-  eyes = "<!-- eyes -->",
-  nose = "<!-- nose -->",
-  mouth = "<!-- mouth -->",
+  body = "<!-- body -->",
   beard = "<!-- beard -->",
+  eyes = "<!-- eyes -->",
+  hair = "<!-- hair -->",
 }
 
 export enum AspectRatio {
@@ -23,23 +22,25 @@ export enum AspectRatio {
   HEIGHT = 1024,
 }
 
-export enum FaceParts {
+export enum BodyParts {
+  accessories = "accessories",
   background = "background",
-  head = "head",
-  hair = "hair",
-  eyes = "eyes",
-  nose = "nose",
-  mouth = "mouth",
+  body = "body",
   beard = "beard",
+  eyes = "eyes",
+  hair = "hair",
 }
 
 export enum RarityType {
   COMMON = "common",
   RARE = "rare",
+  EPIC = "epic",
 }
 
 export enum Rarity {
+  accessories = 0.75,
   beard = 0.5,
+  hair = 0.5,
 }
 
 export const adjectives: string[] =
