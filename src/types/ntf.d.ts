@@ -18,8 +18,9 @@ interface ImageAttributes {
 }
 
 interface MetaData {
+  attributes: ImageAttributes[];
   name: string;
   description: string;
   image: string;
-  attributes: ImageAttributes[];
+  rarity;
 }

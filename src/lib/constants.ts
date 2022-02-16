@@ -3,6 +3,11 @@ export const imagesPath = `${outPath}images/`;
 export const jsonPath = `${outPath}json/`;
 export const maxNumberNFT = 50;
 
+export enum Logs {
+  SHOW = "SHOW_LOGS",
+  HIDE = "HIDE_LOGS",
+}
+
 export enum SVGImagePart {
   background = "<!-- bg -->",
   head = "<!-- head -->",
@@ -21,6 +26,11 @@ export enum FaceParts {
   nose = "nose",
   mouth = "mouth",
   beard = "beard",
+}
+
+export enum RarityType {
+  COMMON = "common",
+  RARE = "rare",
 }
 
 export enum Rarity {

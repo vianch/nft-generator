@@ -18,11 +18,13 @@ import {
   names,
   outPath,
   Rarity,
+  RarityType,
   SVGImagePart,
 } from "./constants";
 
 // Utils
 import { getRandomInt, randomElement } from "../utils/random.utils";
+import logger, { consoleColors } from "./logger";
 
 const SVGtemplate = `
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -43,6 +45,10 @@ function getRandomName(): string {
   const fullName = `${randomAdjective}-${randomName}`;
 
   if (takenNames[fullName] || !fullName) {
+    logger.info(
+      consoleColors.Yellow,
+      `Name ${fullName} already exists, trying again`
+    );
     return getRandomName();
   } else {
     takenNames[fullName] = fullName;
@@ -79,8 +85,9 @@ function getLayer(name: string, version: number, skipPercentage = 0.0): string {
   return Math.random() > skipPercentage && layer ? layer : "";
 }
 
-function getFaceTemplate(face: Face): string {
-  return SVGtemplate.replace(
+function getFaceTemplate(face: Face): { image: string; rarity: RarityType } {
+  const beardLayer = getLayer(FaceParts.beard, face.beard, Rarity.beard);
+  const image = SVGtemplate.replace(
     SVGImagePart.background,
     getLayer(FaceParts.background, face.background)
   )
@@ -89,23 +96,33 @@ function getFaceTemplate(face: Face): string {
     .replace(SVGImagePart.eyes, getLayer(FaceParts.eyes, face.eyes))
     .replace(SVGImagePart.nose, getLayer(FaceParts.nose, face.nose))
     .replace(SVGImagePart.mouth, getLayer(FaceParts.mouth, face.mouth))
-    .replace(
-      SVGImagePart.beard,
-      getLayer(FaceParts.beard, face.beard, Rarity.beard)
-    );
+    .replace(SVGImagePart.beard, beardLayer);
+
+  // TODO: Change rarity return to a rarity calculation method
+  return {
+    image,
+    rarity: beardLayer?.length > 0 ? RarityType.RARE : RarityType.COMMON,
+  };
 }
 
-function getMetaData(name: string): MetaData {
+function getMetaDataAttributes(rarity: RarityType): ImageAttributes[] {
+  return rarity === RarityType.RARE
+    ? [
+        {
+          name: FaceParts.beard,
+          rarity: Rarity.beard,
+        },
+      ]
+    : [];
+}
+
+function getMetaData(name: string, rarity: RarityType): MetaData {
   return {
     name,
     description: `A drawing of ${name.split("-").join(" ")}`,
     image: `${name}.png`,
-    attributes: [
-      {
-        name: FaceParts.beard,
-        rarity: Rarity.beard,
-      },
-    ],
+    rarity,
+    attributes: getMetaDataAttributes(rarity),
   };
 }
 
@@ -118,7 +135,9 @@ async function svgToPng(name: string): Promise<void> {
 
     await imageResized.toFile(destination);
   } catch (error) {
-    throw new Error("Cannot convert SVG to PNG");
+    const errorMessage = "Cannot convert SVG to PNG";
+    logger.error(consoleColors.Red, errorMessage);
+    throw new Error(errorMessage);
   }
 }
 
@@ -126,27 +145,35 @@ function createImage(): void {
   const randomFace = getRandomFace();
 
   if (takenFaces[randomFace.faceId]) {
+    logger.info(
+      consoleColors.Yellow,
+      `FaceId ${randomFace.faceId} already exists, trying again`
+    );
     createImage();
   } else {
     const name = getRandomName();
-    const finalSVGImage = getFaceTemplate(randomFace.face);
-    const imageMetaData = getMetaData(name);
+    const faceTemplate = getFaceTemplate(randomFace.face);
+    const imageMetaData = getMetaData(name, faceTemplate.rarity);
 
     // Export final SVG image and JSON Metadata
-    writeFileSync(`${imagesPath}${name}.svg`, finalSVGImage);
+    writeFileSync(`${imagesPath}${name}.svg`, faceTemplate.image || "");
     writeFileSync(`${jsonPath}${name}.json`, JSON.stringify(imageMetaData));
     svgToPng(name);
     takenFaces[randomFace.faceId] = randomFace.faceId;
+    logger.info(consoleColors.Green, `- ${name} created`);
   }
 }
 
 function buildSetup(): void {
   // Create dir if not exists
   if (!existsSync(outPath)) {
+    logger.info(consoleColors.Yellow, `Creating ${outPath} and subfolders`);
     mkdirSync(outPath);
     mkdirSync(imagesPath);
     mkdirSync(jsonPath);
   } else {
+    logger.info(consoleColors.Yellow, `Cleaning ${outPath}`);
+
     // Cleanup dir before each run
     readdirSync(imagesPath).forEach((file: string) =>
       rmSync(`${imagesPath}${file}`)
@@ -159,6 +186,7 @@ function buildSetup(): void {
 }
 
 export default function nftGenerator(): void {
+  logger.info(consoleColors.Green, `STARTING NFT GENERATION`);
   buildSetup();
 
   for (let i = 0; i < maxNumberNFT; i++) {
