@@ -1,4 +1,11 @@
-import { readFileSync, writeFileSync, rmSync, existsSync, mkdirSync } from "fs";
+import {
+  readFileSync,
+  writeFileSync,
+  rmSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+} from "fs";
 import sharp from "sharp";
 
 // Constants
@@ -15,7 +22,7 @@ import {
 } from "./constants";
 
 // Utils
-import { getRandomInt, randomElement } from "@/utils/random.utils";
+import { getRandomInt, randomElement } from "../utils/random.utils";
 
 const SVGtemplate = `
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -62,10 +69,14 @@ function getRandomFace(combinations = 4): { faceId: string; face: Face } {
 }
 
 function getLayer(name: string, version: number, skipPercentage = 0.0): string {
-  const svgFile = readFileSync(`./svg/${name}/${name}${version}.svg`, "utf8");
-  const regularExpression = /(?<=<svg\s*[^>]*>)([\s\S]*?)(?=<\/svg>)/g;
-  const layer = svgFile.match(regularExpression)[0];
-  return Math.random() > skipPercentage ? layer : "";
+  const svgFile = readFileSync(
+    `./layers/${name}/${name}${version}.svg`,
+    "utf8"
+  );
+  const regularExpression = /(?<=<svg\s*[^>]*>)([\s\S]*?)(?=<\/svg>)/g || [""];
+  const match = svgFile?.match(regularExpression);
+  const layer = match ? match[0] : "";
+  return Math.random() > skipPercentage && layer ? layer : "";
 }
 
 function getFaceTemplate(face: Face): string {
@@ -84,7 +95,7 @@ function getFaceTemplate(face: Face): string {
     );
 }
 
-function getMetaData(name): MetaData {
+function getMetaData(name: string): MetaData {
   return {
     name,
     description: `A drawing of ${name.split("-").join(" ")}`,
@@ -107,7 +118,7 @@ async function svgToPng(name: string): Promise<void> {
 
     await imageResized.toFile(destination);
   } catch (error) {
-    throw new Error(error);
+    throw new Error("Cannot convert SVG to PNG");
   }
 }
 
@@ -130,11 +141,21 @@ function createImage(): void {
 }
 
 function buildSetup(): void {
-  if (existsSync(outPath)) {
-    rmSync(outPath);
-  }
+  // Create dir if not exists
+  if (!existsSync(outPath)) {
+    mkdirSync(outPath);
+    mkdirSync(imagesPath);
+    mkdirSync(jsonPath);
+  } else {
+    // Cleanup dir before each run
+    readdirSync(imagesPath).forEach((file: string) =>
+      rmSync(`${imagesPath}${file}`)
+    );
 
-  mkdirSync(outPath);
+    readdirSync(jsonPath).forEach((file: string) =>
+      rmSync(`${jsonPath}${file}`)
+    );
+  }
 }
 
 export default function nftGenerator(): void {

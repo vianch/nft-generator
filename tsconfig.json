@@ -5,17 +5,9 @@
     "rootDirs": ["src"],
     "baseUrl": "src",
     "outDir": "dist",
-    "paths": {
-      "@/sections/*": ["components/sections/*"],
-      "@/components/*": ["components/*"],
-      "@/models/*": ["models/*"],
-      "@/utils/*": ["utils/*"],
-      "@/lib/*": ["lib/*"],
-      "@/theme/*": ["theme/*"]
-    },
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": false,
     "esModuleInterop": true,
@@ -27,9 +19,9 @@
     "typeRoots": ["./src/types/", "node_modules/@types"],
     "types": ["node"],
     "isolatedModules": true,
-    "inlineSourceMap": false,
+    "sourceMap": true,
     "incremental": true
   },
-  "include": ["src/types/**/*", "src/index.ts", "src/**/*.ts"],
+  "include": ["src/types/**/*", "src/index.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "**/__tests__/*"]
 }

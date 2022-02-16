@@ -1,4 +1,4 @@
-import nftGenerator from "@/lib/ntfGenerator";
+import nftGenerator from "./lib/ntfGenerator";
 
 (() => {
   nftGenerator();
