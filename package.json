@@ -6,7 +6,7 @@
   "author": "Victor <vachavarro@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc src/index.ts",
+    "build": "tsc",
     "lint:staged": "lint-staged",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
